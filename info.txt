@@ -1,0 +1,139 @@
+nodejs
+переход в проект
+ npm i gulp -g
+без русскоязычного адреса
+npm init
+npm i gulp --save-dev
+папка app-> css,fonts,img,js,sass,index.html; app - исходники папка dist - результат сборки
+gulpfile.js->
+var gulp = require('gulp');
+gulp.task('mytask', function(){
+return gulp.src('source-files')//можно шаблон app/sass/**/*.sass, !app/sass/main.sass(исключение),можно массив, *.+(sass|scss)или
+.pipe(plugin())
+.pipe(gulp.dest('folder'))
+});
+cmd->
+npm i gulp-sass --save-dev
+gf.js->
+var sass = require('gulp-sass')
+app->sass->main.sass-> body bgc #000
+gf.js->
+gulp.task('sass', function(){
+return gulp.src('app/sass/main.sass')
+.pipe(sass())
+.pipe(autoprefixer(['last 15  versions', '> 1%', 'ie 8', 'ie 7', {cascade: true}]))
+.pipe(gulp.dest('app/css'))
+.pipe(browseerSync.reload({stream: true}))
+});
+_part.sass //чвасть файла @import'part'
+gf.js->
+gulp.task('watch',['browser-sync','css-libs', 'scripts'], function(){//task('название таска', ["массив тасков выполняемых до данного таска"], function()
+gulp.watch('app/sass/**/*.sass',['sass']);// адрес - смотрит , массив тасков выполняемых при изменении
+gulp.watch('app/*.html', browserSync.reload);
+gulp.watch('app/js/**/*.js', browserSync.reload);
+});
+//cntrl+c 2раза - выход из вочинга
+npm i browser-sync --save-dev
+gf.js->
+var browserSync = require('browser-sync')
+gulp.task('browser-sync', function(){
+browserSync({
+server: {
+baseDir: 'app'
+},
+notify: false
+});
+});
+cmd-> gulp watch
+app->js->common.js
+app->libs
+cmd-> npm i -g bower
+установка гит
+project->.bowerrc.
+.bowerrc.->
+{
+'directory': 'app/libs'
+}
+cmd->
+bower i jquery magnific-popup
+npm i gulp-cancat gulp-uglifyjs --save-dev
+gf.js->
+var cancat = require('gulp-cancat'),
+var uglify = require('gulp-uglifyjs'),
+gulp.task('scripts', function(){
+return gulp.src([
+'app/libs/jquery/dist/jquery.min.js',
+'app/libs/magnific-popup/dist/jquery.magnific-popup.min.js',
+])
+.pipe(cancat('libs.min.js'))
+.pipe(uglify())
+.pipe(gulp.dest('app/js'));
+
+})
+cmd-> gulp scripts
+index.html->
+script src="js/libs.min.js"
+script src= "js/common.js"
+cmd -> gulp watch
+app->sass->libs.sass-> @import 'app/libs/magnifc-popup/dist/magnific-popup'
+npm i gulp-cssnano gulp-rename --save-dev
+gf.js->
+cssnano = require('gulp-cssnano')
+var rename = require('gulp-rename')
+gulp.tasc('css-libs',['sass'], function(){
+return gulp.src('app/css/libs.css')
+.pipe(cssnano())
+.pipe(rename({suffix: '.min'}))
+.pipe(gulp.dest('app/css'))
+})
+index.html-> 
+link href="css/libs.min.css"
+cmd-> gulp watch
+gf.js->
+gulp.task('build',['clean', 'img', 'sass', 'scripts'], function(){
+var buildCss = gulp.src([
+'app/css/main.css',
+'app/css/libs.min.css',
+])
+.pipe(gulp.dest('dist/css'));
+
+var buildFonts = gulp.src('app/fonts/**/*')
+.pipe(gulp.dest('dist/fonts'));
+
+var buildJs = gulp.src('app/js/**/*')
+.pipe(gulp.dest('dist/js'))
+
+var buildHtml = gulp.src('app/*.html')
+.pipe(gulp.dest('dist'))
+
+});
+
+npm i del --save-dev
+gf.js->
+var del = require('del')
+gulp.task('clean', function(){
+return del.sync('dist');
+})
+gulp.task('clear', function(){
+return cache.clearAll();
+})
+npm i --save-dev gulp-imagemin imagemin-pngquant
+gf.js->
+var imagemin = require('gulp-imagemin')
+var pngquant = require('imagemin-pngquant')
+gulp.task('img', function(){
+return gulp.src('app/img/**/*')
+.pipe(cache(imagemin({
+interlaced: true,
+progressive: true,
+svgoPlugins:[{removeViewBox: false}],
+use: [pngquant()]
+})))
+.pipe(gulp.dest('dist/img'))
+})
+npm i gulp-cache --save-dev
+gf.js->
+var cache = require('gulp-cache')
+npm i --save-dev gulp-autoprefixer
+gf.js->
+var autoprefixer = require('gulp-autoprefixer')
